@@ -1,0 +1,6 @@
+"0","vvg_fbi <- vvg_fbi %>%"
+"0","  mutate(sum_year_rate = (sum_year_sale * 100000)/population)"
+"0",""
+"0","ggplot(data = vvg_fbi, aes(x = sum_year_rate, y = violent_crime_rate)) +"
+"0","  geom_point() +"
+"0","  geom_smooth(method = 'lm', se = FALSE)"

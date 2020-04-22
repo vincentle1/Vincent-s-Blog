@@ -1,0 +1,35 @@
+"0","library(readxl)"
+"0",""
+"0","####### FBI Violent Crime Data ###########################################################"
+"0","violent_crime <- read_excel(""/home/vincentle/Violent Videogame Project/violent_crime_FBI.xls"")"
+"2","New names:
+* `` -> ...2
+* `` -> ...3
+* `` -> ...4
+* `` -> ...5
+* `` -> ...6
+* … and 18 more problems
+"
+"0","###### Clean Violent Crime Data ########################"
+"0",""
+"0","#Choose rows"
+"0","violent_crime <- violent_crime[3:23, ]"
+"0",""
+"0","#Change headers"
+"0","names(violent_crime) <- violent_crime[1, ]"
+"2","Must use a character vector as names.
+[90mThis warning is displayed once per session.[39m"
+"0","#Delete first row"
+"0","violent_crime <- violent_crime[-1, ]"
+"0",""
+"0","#Select desired columns and filter desired rows, then change 20176 to 2017"
+"0","violent_crime <- violent_crime[7:20 ,1:4]"
+"0","violent_crime[13,1] <- 2017"
+"0",""
+"0","#Convert columns to desired types, rename column properly, clean up final"
+"0","violent_crime <- violent_crime %>%"
+"0","  mutate_at(c(2:4), as.double) %>%"
+"0","  mutate_at(1, as.factor) %>%"
+"0","  rename(year = Year)"
+"0",""
+"0","head(violent_crime)"

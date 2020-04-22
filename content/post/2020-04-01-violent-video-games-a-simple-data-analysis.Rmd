@@ -1,0 +1,224 @@
+---
+title: 'Violent Video Games: A Simple Data Analysis'
+author: Vincent
+date: '2020-04-01'
+slug: violent-video-games-a-simple-data-analysis
+categories:
+  - psychology
+tags:
+  - data
+  - literature
+  - R
+  - regression
+  - statistics
+  - violent
+  - video games
+---
+---
+title: 'Violent Video Games: A Simple Regression Analysis'
+author: Vincent Le
+date: '2020-04-01'
+slug: violent-video-games-a-simple-regression-analysis
+categories:
+  - psychology
+tags:
+  - video games
+  - violent
+  - data
+  - science
+  - statistics
+  - regression
+  - R
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2020-04-01T17:28:17-07:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+Note: All source code can be found on [this Github repo](https://github.com/vincentle1/Violent-Video-Game-Data-Analysis).
+
+## Introduction 
+
+In the last post, I explored the [existing literature](https://vincentle1.netlify.com/post/violent-video-games-literature-review/) on violent video games and violent crime. If you recall, the studies I shared found that an increase in violent video game sales was associated with a *decrease* in violent crime. 
+
+To see whether these counterintuitive results held up, I ran a quick and dirty [linear regression](https://www.statisticshowto.com/probability-and-statistics/regression-analysis/find-a-linear-regression-equation/) with violent video game sales as the predictor variable and the violent crime rate in the US as the outcome variable.
+  
+In this post, I'll describe my entire process and share the results.
+
+
+## Gathering and Tidying the Data
+
+So, where did I get the data in the first place?
+
+For violent video game sales, I used https://www.vgchartz.com/, which has tables that list the 100 top-selling video games in the United States by year and genre. I decided to only include games from the action, shooter and fighting genres, in order to ensure I was specifically analyzing violent video games and not video games in general. 
+
+For violent crime, I used a table from the [Uniform Crime Reporting Program](https://www.fbi.gov/services/cjis/ucr), a database maintained by the FBI. Violent crime is defined by the FBI as murder/manslaughter, rape, robbery and aggravated assault.
+
+Once I decided where to get the data, I needed to gather it and tidy it into a suitable form for further analysis. I did this in four steps:
+
+1. First, I wrote a webscraper function that automatically pulled the video game sale tables off of https://www.vgchartz.com/, and then filtered them by genre. It allowed me to pull a table from any year I wanted and put that into an R dataframe. Because I'm really proud of it, here's the whole function below!
+
+
+```{r echo=TRUE}
+library(rvest)
+library(stringr)
+library(tidyverse)
+
+vg_scraper <- function(year){
+#Scrape the chart
+url <- paste("https://www.vgchartz.com/yearly/", year, "/USA/", sep = "") 
+
+vg_list <- url %>%
+  read_html() %>%
+#html_nodes finds the table by CSS selector.
+  html_nodes('#chart_body > table') %>%
+#html_table puts it into a list of tables.
+  html_table(fill = TRUE)
+
+#This extracts the table into a final dataframe we can work with.
+vg_dataframe <- vg_list[[1]]
+
+##Clean up the chart
+
+#1. Select columns
+vg_dataframe <- vg_dataframe[c(2, 8)]
+
+#2. Rename columns
+names(vg_dataframe)[2] <- "Yearly_Sales"
+
+#3. Remove all rows with NA
+vg_dataframe <- vg_dataframe %>%
+  filter(!is.na(vg_dataframe$Yearly_Sales))
+
+#4. Remove commas from Yearly_Sales using gsub and convert to numeric
+vg_dataframe$Yearly_Sales <- as.numeric(gsub(",", "", vg_dataframe$Yearly_Sales))
+
+#5. Filter by genre. Action, shooter and fighting
+vg_dataframe <- vg_dataframe %>%
+  filter(str_detect(Game, "Action|Shooter|Fighting" ))
+
+#6. Return dataframe
+vg_dataframe
+}
+```
+
+Here's some sample output from this function. Say I wanted the video game sale data from 2015. I could just type vg_scraper(2015) and get:
+
+```{r echo=TRUE}
+head(vg_scraper(2015))
+```
+
+2. I then wrote a more general function that used the vg_scraper function to combine all the video game sales from 2005-2018 into one simple dataframe. Here's that output. 
+
+```{r echo=FALSE}
+vvg_sum <- function(){
+final_data <- data.frame(year = integer(0), sum_year_sale = double(0))
+for (val in c(2005:2018)){
+  a <- vg_scraper(val)
+  sum_yr <- a %>%
+    summarize(sum_year_sale = sum(Yearly_Sales)) %>%
+    mutate(year = val) %>%
+    select(year, sum_year_sale)
+  final_data <- rbind(final_data, sum_yr)
+}
+final_data <- final_data %>%
+  mutate_at(1, as.factor)
+final_data
+}
+
+vvg_data <- vvg_sum()
+vvg_data
+```
+
+3. After this, I extracted the FBI data and cleaned it up. Here's what that looks like.
+```{r echo=FALSE}
+library(readxl)
+
+####### FBI Violent Crime Data ###########################################################
+violent_crime <- read_excel("/home/vincentle/Violent Videogame Project/violent_crime_FBI.xls")
+
+###### Clean Violent Crime Data ########################
+
+#Choose rows
+violent_crime <- violent_crime[3:23, ]
+
+#Change headers
+names(violent_crime) <- violent_crime[1, ]
+
+#Delete first row
+violent_crime <- violent_crime[-1, ]
+
+#Select desired columns and filter desired rows, then change 20176 to 2017
+violent_crime <- violent_crime[7:20 ,1:4]
+violent_crime[13,1] <- 2017
+
+#Convert columns to desired types, rename column properly, clean up final
+violent_crime <- violent_crime %>%
+  mutate_at(c(2:4), as.double) %>%
+  mutate_at(1, as.factor) %>%
+  rename(year = Year)
+
+head(violent_crime)
+
+```
+
+4. Lastly, I merged the FBI data with the final output of the video game data. Here's the final dataframe, ready for analysis. The "sum_year_sale" is violent video game sales, "population" is total US population that year, "violent_crime_abs" is total violent crime, and "violent_crime_rate" is violent crime per 100,000 people.
+  
+```{r echo=FALSE}
+vvg_fbi <- vvg_data %>% 
+  inner_join(violent_crime)
+
+##### Rename columns to take out spaces #####
+
+names(vvg_fbi)[3] <- 'population'
+names(vvg_fbi)[4] <- 'violent_crime_abs'
+names(vvg_fbi)[5] <- 'violent_crime_rate'
+
+vvg_fbi
+```
+
+## Analysis
+
+Okay, enough background, on to the regression! 
+
+I first plotted the data with violent crime rate per 100,000 people on the y-axis and annual violent video game sales per 100,000 people on the x-axis.
+
+
+```{r echo=FALSE}
+vvg_fbi <- vvg_fbi %>%
+  mutate(sum_year_rate = (sum_year_sale * 100000)/population)
+
+ggplot(data = vvg_fbi, aes(x = sum_year_rate, y = violent_crime_rate)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE)
+```
+
+If I had more data points the graph would be cleaner, but I only had access to violent video game sales starting from 2005. Still, this looked like a negative correlation to me! And indeed it was.
+
+```{r echo=FALSE}
+cor(vvg_fbi$sum_year_rate, vvg_fbi$violent_crime_rate)
+```
+
+So as violent video game sales went up per year, the violent crime rate went down.
+
+Now the question remained: Would this trend be statistically significant? To check this, I ran the regression. Here's the output.
+
+```{r echo=TRUE}
+model <- lm(violent_crime_rate ~ sum_year_rate, vvg_fbi)
+summary(model)
+```
+
+The adjusted R-Squared was 0.673, meaning the model explained 67.3% of the variation. That's pretty substantial. 
+
+The F-statistic, and by extension, the regression coefficient for violent video game sales, was statistically significant. Therefore, we can infer that for every additional violent video game sale per 100,000 people, the violent crime rate decreased by -0.008.  
+
+So when we put it all together, what do these facts mean?
+
+Well, I have to be careful with the conclusions I draw. Because my model was so simple, we can't really make any causal claims. It's possible that we are just seeing a spurious connection. In fact, it's even possible violent video games *do* lead to an increase in violent crime, but this effect is dwarfed by larger omitted variables that pulled the violent crime rate down.
+
+However, at bare minimum, I can say that even if violent video game sales lead to an increase in the crime rate, it must be a very small effect indeed.

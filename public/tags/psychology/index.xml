@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>psychology on Vincent&#39;s Blog</title>
+    <link>/tags/psychology/</link>
+    <description>Recent content in psychology on Vincent&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 30 Mar 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/psychology/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Violent Video Games: A (Biased) Look at the Research</title>
+      <link>/2020/03/30/violent-video-games-literature-review/</link>
+      <pubDate>Mon, 30 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/2020/03/30/violent-video-games-literature-review/</guid>
+      <description>Introduction When I was 11 years old, I begged my dad to buy me Fallout 3. Now, Fallout 3 is a highly immersive video game with a complex storyline that grapples with difficult moral questions. It also happens to be a game where you can shoot people and watch their heads explode. My dad, knowing this, prudently declined to purchase the game for his 11 year old. So instead I went over to my friend’s house to play Call of Duty, a game where you can shoot people and watch their heads explode.</description>
+    </item>
+    
+  </channel>
+</rss>
