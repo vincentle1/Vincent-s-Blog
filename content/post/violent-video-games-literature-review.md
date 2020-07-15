@@ -26,7 +26,7 @@ image:
   preview_only: no
 projects: []
 ---
-![drawing of kid playing violent video game](/post/violent-video-games-literature-review_files/cover.png)
+<img src="/post/violent-video-games-literature-review_files/vvg-cover.jpg" alt="drawing of kid playing violent videogame" width="100%"/>
 
 ## Introduction
 
